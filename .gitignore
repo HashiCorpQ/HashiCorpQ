@@ -1,14 +1,16 @@
-# Local .terraform directories
+# ----- Terraform .gitignore (canonical) -----
 **/.terraform/*
-
-# .tfstate files
 *.tfstate
 *.tfstate.*
-
-# Crash log files
 crash.log
 crash.*.log
-
-# Ignore CLI configuration files
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 .terraformrc
 terraform.rc
+.terraform.tfstate.lock.info
+# .terraform.lock.hcl is intentionally NOT ignored -- commit it.

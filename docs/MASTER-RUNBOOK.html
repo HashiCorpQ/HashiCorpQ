@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HashiCorpQ — Master Runbook · Terraform Learning &amp; Mastering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#F4F5F8; --panel:#FFFFFF; --ink:#15161C; --ink-soft:#3A3C46;
+    --slate:#5E6472; --line:#DCDFE6; --line-soft:#E8EAF0;
+    --tf:#7B42BC; --tf-deep:#4F2D8C; --tf-wash:#F1EAFA;
+    --green:#1C7A52; --green-wash:#E6F3EC;
+    --amber:#9C5E08; --amber-wash:#FBF0DD;
+    --red:#B23A48; --red-wash:#FBEAEC;
+    --term-bg:#16161F; --term-line:#2C2C3A; --term-text:#E7E7F1; --term-dim:#9A9AB4;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--tf);width:0;z-index:60;transition:width .12s linear}
+
+  /* ---- shell: sticky TOC + content ---- */
+  .shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:232px 1fr;gap:40px;padding:0 24px}
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:26px 0 40px;border-right:1px solid var(--line)}
+  nav.toc .brand{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0 0 4px}
+  nav.toc .brand span{color:var(--tf)}
+  nav.toc .sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--slate);letter-spacing:.04em;margin-bottom:20px}
+  nav.toc a{display:block;font-size:13px;color:var(--ink-soft);text-decoration:none;padding:5px 12px 5px 0;border-left:2px solid transparent;padding-left:12px;transition:.15s}
+  nav.toc a .k{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--tf);margin-right:7px}
+  nav.toc a:hover{color:var(--tf-deep)}
+  nav.toc a.active{border-left-color:var(--tf);color:var(--ink);font-weight:600}
+  main{min-width:0;padding-bottom:80px}
+
+  /* ---- hero ---- */
+  header.hero{padding:52px 0 30px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tf-deep);font-weight:600;margin:0 0 14px}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0 0 16px}
+  h1 .accent{color:var(--tf)}
+  .thesis{font-size:18px;color:var(--ink-soft);max-width:64ch;margin:0}
+  .thesis b{color:var(--ink);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;font-family:"JetBrains Mono",monospace;font-size:12px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--slate)}
+  .chip b{color:var(--tf-deep);font-weight:600}
+
+  /* ---- status banner ---- */
+  .status{display:flex;gap:14px;align-items:flex-start;background:var(--green-wash);border:1px solid #BfE3CE;border-radius:12px;padding:16px 18px;margin:24px 0}
+  .status .badge{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--green);color:#fff;padding:4px 9px;border-radius:6px;white-space:nowrap;margin-top:2px}
+  .status p{margin:0;font-size:14.5px}
+
+  section{padding:44px 0;border-bottom:1px solid var(--line-soft);scroll-margin-top:12px}
+  .num{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;color:var(--tf);letter-spacing:.05em;display:block;margin-bottom:8px}
+  h2{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:clamp(22px,3.4vw,29px);letter-spacing:-.01em;line-height:1.14;margin:0 0 12px}
+  h3{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:17.5px;margin:28px 0 8px}
+  p{margin:0 0 15px}
+  .lead{font-size:17px;color:var(--ink-soft)}
+  strong{font-weight:600}
+  code{font-family:"JetBrains Mono",monospace;font-size:.85em;background:var(--tf-wash);color:var(--tf-deep);padding:1.5px 6px;border-radius:5px}
+  a{color:var(--tf-deep)}
+
+  .key{border-left:3px solid var(--tf);background:var(--tf-wash);padding:16px 18px;border-radius:0 10px 10px 0;margin:20px 0}
+  .key .tag{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tf-deep);font-weight:600;display:block;margin-bottom:5px}
+  .key p:last-child{margin-bottom:0}
+  .note{border-left-color:var(--green);background:var(--green-wash)} .note .tag{color:var(--green)}
+  .warn{border-left-color:var(--amber);background:var(--amber-wash)} .warn .tag{color:var(--amber)}
+  .stop{border-left-color:var(--red);background:var(--red-wash)} .stop .tag{color:var(--red)}
+
+  .tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}
+  .tbl th{text-align:left;font-family:"JetBrains Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);padding:8px 11px;border-bottom:1.5px solid var(--line)}
+  .tbl td{padding:10px 11px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td.first,.tbl td:first-child{font-weight:600}
+  .mono{font-family:"JetBrains Mono",monospace;font-size:.9em}
+
+  /* accounts */
+  .acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+  .acct{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+  .acct.hub{border-color:var(--tf);box-shadow:0 0 0 1px var(--tf) inset}
+  .acct .name{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14.5px}
+  .acct .id{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--slate);margin:2px 0 6px}
+  .acct .role{font-size:12.5px;color:var(--ink-soft);line-height:1.45}
+  .badge2{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:5px;margin-bottom:6px}
+  .b-hub{background:var(--tf);color:#fff}.b-seat{background:var(--green);color:#fff}.b-spoke{background:var(--tf-wash);color:var(--tf-deep)}.b-ext{background:#ECEEF3;color:var(--slate)}
+
+  /* tree + terminal */
+  .tree{background:var(--term-bg);border-radius:11px;padding:18px 20px;margin:18px 0;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.7;color:var(--term-text);overflow-x:auto}
+  .tree .d{color:#9C7BE0;font-weight:600}.tree .c{color:var(--term-dim)}.tree .h{color:#6FD79A}
+  .term{margin:14px 0;border-radius:11px;overflow:hidden;border:1px solid var(--term-line)}
+  .term-bar{background:#1F1F2B;padding:8px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--term-line)}
+  .term-bar .dots{display:flex;gap:5px}.term-bar .dots i{width:10px;height:10px;border-radius:50%;display:block}
+  .term-bar .dots i:nth-child(1){background:#E05D5D}.term-bar .dots i:nth-child(2){background:#E0A93D}.term-bar .dots i:nth-child(3){background:#5DB075}
+  .term-bar .path{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--term-dim);margin-left:3px}
+  .term pre{margin:0;background:var(--term-bg);color:var(--term-text);padding:14px 16px;overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.62}
+  .term pre .p{color:#9C7BE0}.term pre .o{color:var(--term-dim)}.term pre .g{color:#6FD79A}
+
+  /* step */
+  .step{display:grid;grid-template-columns:38px 1fr;gap:15px;margin:22px 0}
+  .step .n{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:14px;color:#fff;background:var(--tf);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .step .body{padding-top:4px}.step h3{margin-top:0}
+
+  /* protocol */
+  .proto{counter-reset:pc;margin:18px 0}
+  .proto .pi{display:grid;grid-template-columns:30px 1fr;gap:14px;margin:12px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .proto .pi::before{counter-increment:pc;content:counter(pc);font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--tf);font-size:14px}
+  .proto .pi h4{margin:0 0 3px;font-family:"Space Grotesk",sans-serif;font-size:14.5px}
+  .proto .pi p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+
+  .cheat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+  .cheat .c{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 13px}
+  .cheat .c .t{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:13px;margin-bottom:6px}
+  .cheat .c code{display:block;background:none;color:var(--ink);padding:1px 0;font-size:12px}
+
+  footer{padding:34px 0 20px;color:var(--slate);font-size:13px}
+
+  @media(max-width:860px){
+    .shell{grid-template-columns:1fr;gap:0}
+    nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:18px 0}
+    nav.toc a{display:inline-block;border-left:none;padding:4px 10px 4px 0}
+    nav.toc a.active{border-left:none;text-decoration:underline}
+    .acct-grid,.cheat{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="bar"></div>
+
+<div class="shell">
+  <nav class="toc" id="toc">
+    <p class="brand">HashiCorp<span>Q</span></p>
+    <p class="sub">MASTER RUNBOOK · v2</p>
+    <a href="#snapshot"><span class="k">00</span>Snapshot &amp; status</a>
+    <a href="#arch"><span class="k">01</span>Architecture &amp; WAF/CAF</a>
+    <a href="#repo"><span class="k">02</span>Repo &amp; state layout</a>
+    <a href="#preflight"><span class="k">P1</span>Pre-flight validation</a>
+    <a href="#deploy"><span class="k">P2</span>Deployment</a>
+    <a href="#roadblock"><span class="k">★</span>Roadblock protocol</a>
+    <a href="#validate"><span class="k">P3</span>Post-deploy validation</a>
+    <a href="#usecases"><span class="k">UC</span>Practice use cases</a>
+    <a href="#final"><span class="k">P4</span>Destroy &amp; improve</a>
+    <a href="#cheat"><span class="k">§</span>Command cheat-sheet</a>
+  </nav>
+
+  <main>
+  <header class="hero">
+    <p class="eyebrow">webIQ AWS Organization · Clean Start</p>
+    <h1>Terraform:<br><span class="accent">Learning &amp; Mastering</span></h1>
+    <p class="thesis">One document, top to bottom, no back-and-forth. It maps your eight accounts to a Well-Architected landing zone, then runs every phase — pre-flight, deploy, validate, tear down and improve — as a disciplined loop. The single idea underneath it all: <b>in Terraform, the state is yours to hold</b>, and every safeguard here exists to protect it.</p>
+    <div class="chips">
+      <span class="chip">WSL <b>Ubuntu 26.04</b></span>
+      <span class="chip">Terraform <b>1.15.7</b></span>
+      <span class="chip">AWS provider <b>~&gt; 6.0</b></span>
+      <span class="chip">Lock <b>native S3</b></span>
+      <span class="chip">User <b>nq@z2G4</b></span>
+    </div>
+  </header>
+
+  <!-- 00 -->
+  <section id="snapshot">
+    <span class="num">00 — SNAPSHOT &amp; STATUS</span>
+    <h2>Where you actually are right now</h2>
+    <div class="status">
+      <span class="badge">You are here</span>
+      <p>Bootstrap already ran in a prior session, so the state bucket <span class="mono">webiq-tfstate-715841359129-us-east-1</span> <strong>already exists in AWS</strong>. On this fresh machine you do <strong>not</strong> re-run bootstrap — you start at the <strong>foundation stack</strong>, which reads remote state and continues exactly where you left off.</p>
+    </div>
+
+    <h3>Environment</h3>
+    <table class="tbl">
+      <tbody>
+        <tr><td>Working dir</td><td class="mono">~/Workspaces/HashiCorp/HashiCorpQ</td></tr>
+        <tr><td>AWS profile (seat)</td><td class="mono">AWSAdministratorAccess-715841359129</td></tr>
+        <tr><td>Target account</td><td class="mono">715841359129 · webIQ Infrastructure</td></tr>
+        <tr><td>Region</td><td class="mono">us-east-1</td></tr>
+        <tr><td>State bucket</td><td class="mono">webiq-tfstate-715841359129-us-east-1 (exists)</td></tr>
+        <tr><td>GitHub</td><td class="mono">github.com/HashiCorpQ/HashiCorpQ.git</td></tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      <span class="tag">Profile note</span>
+      <p>Your shell currently points at Management (<code>...-034362030640</code>). Everything here targets Infrastructure. Either export the seat profile once — <code>export AWS_PROFILE=AWSAdministratorAccess-715841359129</code> — or rely on the values baked into the code. The pre-flight script confirms you're on the right account before anything runs.</p>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section id="arch">
+    <span class="num">01 — ARCHITECTURE &amp; WAF/CAF</span>
+    <h2>Eight accounts as a Control Tower–style landing zone</h2>
+    <p class="lead">You built the account structure by hand (no Control Tower service enabled), and it lines up cleanly with the reference model. Roles:</p>
+
+    <div class="acct-grid">
+      <div class="acct"><div class="name">webIQ Management</div><div class="id">034362030640</div><div class="role">Org root / payer. SCPs, billing, account vending. No workloads.</div></div>
+      <div class="acct"><div class="name">webIQ.Logs</div><div class="id">034362030106</div><div class="role">Log Archive. Immutable CloudTrail / Config / flow-log sink.</div></div>
+      <div class="acct"><div class="name">webIQ.Audit</div><div class="id">034362030735</div><div class="role">Audit. Read-only security review / cross-account audit role home.</div></div>
+      <div class="acct"><div class="name">webIQ.Security</div><div class="id">816069165608</div><div class="role">Security tooling. GuardDuty / Security Hub / Access Analyzer delegated admin.</div></div>
+      <div class="acct hub"><span class="badge2 b-hub">Hub</span><div class="name">webIQ Networking</div><div class="id">571600834876</div><div class="role">Transit Gateway, centralized egress + inspection, DNS, RAM sharing.</div></div>
+      <div class="acct"><span class="badge2 b-seat">TF Seat</span><div class="name">webIQ Infrastructure</div><div class="id">715841359129</div><div class="role">Shared services. Terraform seat, state bucket, CI/CD. <strong>Stage 1 here.</strong></div></div>
+      <div class="acct"><span class="badge2 b-spoke">Spoke</span><div class="name">webIQ Production</div><div class="id">971422673260</div><div class="role">Workload VPCs. Attach to hub TGW; egress through the hub.</div></div>
+      <div class="acct"><span class="badge2 b-ext">External</span><div class="name">angSignal FinOps</div><div class="id">741448964148</div><div class="role">Separate domain. CUR + Cost Explorer aggregation across the estate.</div></div>
+    </div>
+
+    <h3>How the deployment satisfies WAF (Well-Architected Framework)</h3>
+    <table class="tbl">
+      <thead><tr><th>Pillar</th><th>What Stage 1 does</th><th>How you validate it</th></tr></thead>
+      <tbody>
+        <tr><td>Operational Excellence</td><td>IaC, modular, plan-before-apply, remote state, pinned versions</td><td class="mono">plan clean · git history · state remote</td></tr>
+        <tr><td>Security</td><td>Encryption at rest, public access blocked, ownership enforced, SSM values sensitive, SSO identity</td><td class="mono">scripts/10-validate-waf.sh</td></tr>
+        <tr><td>Reliability</td><td>State versioning + native locking, prevent_destroy, reproducible via lock file</td><td class="mono">versioning=Enabled · .tflock on apply</td></tr>
+        <tr><td>Performance Efficiency</td><td>Minimal, right-sized footprint; single region; bucket keys</td><td class="mono">state list (small)</td></tr>
+        <tr><td>Cost Optimization</td><td>Default tags for allocation, budget + 80% alert, destroy hygiene</td><td class="mono">scripts/20-finops-check.sh</td></tr>
+        <tr><td>Sustainability</td><td>Near-zero idle footprint; destroy when not in use</td><td class="mono">scripts/99-teardown.sh</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How it maps to CAF (Cloud Adoption Framework)</h3>
+    <table class="tbl">
+      <thead><tr><th>Perspective</th><th>Expressed as</th></tr></thead>
+      <tbody>
+        <tr><td>Governance</td><td>Tagging standard, budgets, module standards, repo as source of truth</td></tr>
+        <tr><td>Security</td><td>Encryption, public-access-block, SSO identity (roadmap: SCPs, delegated services)</td></tr>
+        <tr><td>Platform</td><td>Landing-zone accounts, hub-and-spoke, reusable modules, remote backend</td></tr>
+        <tr><td>Operations</td><td>This runbook, pre-flight + validation scripts, destroy/redeploy loop</td></tr>
+        <tr><td>Business</td><td>Gov/Commercial use cases, FinOps cost transparency</td></tr>
+      </tbody>
+    </table>
+
+    <div class="warn"><span class="tag">Scope guardrail</span><p>Stage 1 deploys into <strong>Infrastructure only</strong>. Reaching the other seven accounts needs cross-account <code>assume_role</code> (a scoped <code>TerraformExecutionRole</code>) — that's Stage 3, and the right moment to stop riding admin everywhere and adopt least privilege.</p></div>
+  </section>
+
+  <!-- 02 -->
+  <section id="repo">
+    <span class="num">02 — REPO &amp; STATE LAYOUT</span>
+    <h2>The data structure of the estate</h2>
+    <div class="tree">
+<span class="h">HashiCorpQ/</span>
+├─ .gitignore  .terraform-version  README.md
+├─ <span class="d">bootstrap/</span>          <span class="c"># one-time state bucket (ALREADY DONE)</span>
+├─ <span class="d">modules/</span>
+│  └─ <span class="d">secure-bucket/</span>   <span class="c"># reusable Well-Architected bucket</span>
+├─ <span class="d">live/</span>
+│  └─ <span class="d">infrastructure/</span>
+│     └─ <span class="d">foundation/</span>  <span class="c"># ← Stage 1 deploys this</span>
+├─ <span class="d">scripts/</span>           <span class="c"># preflight · validate · finops · teardown</span>
+└─ <span class="d">docs/</span>              <span class="c"># this runbook</span>
+    </div>
+    <p><strong>One state file per account-and-layer</strong>, addressed by a predictable S3 key — so a mistake in one stack can never corrupt another's state. That blast-radius isolation is the discipline regulated work demands.</p>
+    <table class="tbl">
+      <thead><tr><th>Stack</th><th>State key</th></tr></thead>
+      <tbody>
+        <tr><td>Infrastructure foundation</td><td class="mono">infrastructure/foundation/terraform.tfstate</td></tr>
+        <tr><td>Network hub (Stage 3)</td><td class="mono">network/hub/terraform.tfstate</td></tr>
+        <tr><td>Production spoke (Stage 3)</td><td class="mono">production/spoke-app/terraform.tfstate</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- P1 -->
+  <section id="preflight">
+    <span class="num">PHASE 1 — PRE-FLIGHT &amp; ENVIRONMENT VALIDATION</span>
+    <h2>Prove the ground is solid before you touch anything</h2>
+    <p class="lead">Run the pre-flight script first, every session. It checks tools, versions, AWS identity + account, GitHub, and whether the state bucket exists — then tells you which path to take.</p>
+    <div class="term">
+      <div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorp/HashiCorpQ</span></div>
+      <pre><span class="p">$</span> export AWS_PROFILE=AWSAdministratorAccess-715841359129
+<span class="p">$</span> aws sso login --profile "$AWS_PROFILE"     <span class="o"># refresh token if expired</span>
+<span class="p">$</span> ./scripts/00-preflight.sh
+<span class="g">  ✓ terraform 1.15.7   ✓ account 715841359129 (target)</span>
+<span class="g">  ✓ state bucket exists  =&gt; start at the FOUNDATION stack</span></pre>
+    </div>
+    <div class="note"><span class="tag">Read the result, don't skip it</span><p>If pre-flight prints <code>FAIL</code> for AWS identity, you're on the wrong profile or your SSO token expired — fix that before Terraform, or you'll just get the "failed to get shared config profile" error. Green across the board is your permission to proceed.</p></div>
+  </section>
+
+  <!-- P2 -->
+  <section id="deploy">
+    <span class="num">PHASE 2 — DEPLOYMENT</span>
+    <h2>Deploy the foundation, WAF/CAF-driven</h2>
+    <p class="lead">The order below is deliberate: prove state first (Reliability), preview before change (Operational Excellence), then apply. Never invert it.</p>
+
+    <div class="step"><div class="n">1</div><div class="body"><h3>Get the code in place</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorp</span></div>
+      <pre><span class="p">$</span> git clone git@github.com:HashiCorpQ/HashiCorpQ.git
+<span class="p">$</span> cd HashiCorpQ
+<span class="o"># or unzip the provided scaffold, then: git add . &amp;&amp; git commit &amp;&amp; git push</span></pre></div></div></div>
+
+    <div class="step"><div class="n">2</div><div class="body"><h3>Enter the foundation stack &amp; initialize the remote backend</h3>
+      <p>The bucket already exists, so <code>init</code> just wires this stack to it. Answer <code>yes</code> if asked to copy state (there's nothing meaningful to copy on a first run).</p>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">live/infrastructure/foundation</span></div>
+      <pre><span class="p">$</span> cd live/infrastructure/foundation
+<span class="p">$</span> cp terraform.tfvars.example terraform.tfvars
+<span class="p">$</span> terraform init
+<span class="g">Successfully configured the backend "s3"!</span></pre></div></div></div>
+
+    <div class="step"><div class="n">3</div><div class="body"><h3>Format, validate, preview</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">live/infrastructure/foundation</span></div>
+      <pre><span class="p">$</span> terraform fmt -recursive
+<span class="p">$</span> terraform validate            <span class="o"># HCL + provider-schema sanity</span>
+<span class="p">$</span> terraform plan -out tfplan     <span class="o"># preview: expect 7 to add (fresh) or 0 (already applied)</span></pre></div>
+      <div class="note"><span class="tag">Check the plan before applying</span><p>A saved plan is a contract. Confirm the resource count and that nothing shows <code>destroy</code> you didn't intend. On a fresh deploy: the artifacts bucket (5 resources) + SSM parameter + budget = <strong>7 to add</strong>.</p></div></div></div>
+
+    <div class="step"><div class="n">4</div><div class="body"><h3>Apply — watch native locking</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">live/infrastructure/foundation</span></div>
+      <pre><span class="p">$</span> terraform apply tfplan
+<span class="g">Apply complete! Resources: 7 added.</span>
+<span class="o"># During the write, a ...terraform.tfstate.tflock object briefly appears</span>
+<span class="o"># in the bucket -- that's native locking holding your state.</span></pre></div></div></div>
+  </section>
+
+  <!-- ROADBLOCK -->
+  <section id="roadblock">
+    <span class="num">★ THE ROADBLOCK PROTOCOL</span>
+    <h2>When a command fails: stay on-target, waste nothing</h2>
+    <p class="lead">A fixed method beats improvising. It keeps the work grounded in evidence — which is exactly what stops an AI (or a tired engineer at 2am) from inventing a fix that doesn't exist.</p>
+
+    <div class="proto">
+      <div class="pi"><div><h4>Freeze the failure</h4><p>Copy the <em>exact</em> command and the <em>full</em> error, verbatim — never paraphrase. Note <code>terraform version</code>, the provider version, and the profile/account. The literal text is the evidence.</p></div></div>
+      <div class="pi"><div><h4>Localize the layer</h4><p>Every error belongs to one layer. Identify it before touching anything — the table below maps the error signature to the layer and the first command to run.</p></div></div>
+      <div class="pi"><div><h4>Reproduce minimally</h4><p>Re-run the smallest command that fails: <code>aws sts get-caller-identity</code> for auth, <code>terraform validate</code> for HCL, <code>terraform plan</code> for logic. Shrink the surface until the cause is obvious.</p></div></div>
+      <div class="pi"><div><h4>Use ground truth, not guesses</h4><p>Verify against the source, not memory: <code>terraform providers schema -json</code>, the provider registry docs, <code>TF_LOG=DEBUG terraform …</code>, <code>terraform console</code>. If a suggested argument isn't in the schema, it isn't real — reject it.</p></div></div>
+      <div class="pi"><div><h4>Change one thing, re-run</h4><p>Never batch fixes. One change, one re-run, observe. Batching hides which change worked and manufactures new failures.</p></div></div>
+      <div class="pi"><div><h4>Hand Claude a tight packet</h4><p>Paste exactly five things: the command, the full error, the relevant file snippet, the versions, and what changed since it last worked. That's the complete context — more burns tokens, less forces guessing.</p></div></div>
+    </div>
+
+    <h3>Error signature → layer → first move</h3>
+    <table class="tbl">
+      <thead><tr><th>You see…</th><th>Layer</th><th>First command</th></tr></thead>
+      <tbody>
+        <tr><td>failed to get shared config profile</td><td>Auth</td><td class="mono">aws sts get-caller-identity --profile …</td></tr>
+        <tr><td>ExpiredToken / InvalidGrant</td><td>Auth (SSO)</td><td class="mono">aws sso login --profile …</td></tr>
+        <tr><td>Backend init required / Unsetting backend</td><td>State</td><td class="mono">terraform init -reconfigure</td></tr>
+        <tr><td>Unsupported argument / block</td><td>HCL / schema</td><td class="mono">terraform validate</td></tr>
+        <tr><td>AccessDenied / not authorized</td><td>IAM</td><td class="mono">check role policy on the resource ARN</td></tr>
+        <tr><td>BucketAlreadyOwnedByYou</td><td>State (dup)</td><td class="mono">skip bootstrap / import existing</td></tr>
+        <tr><td>Error acquiring the state lock</td><td>State lock</td><td class="mono">wait, then terraform force-unlock &lt;ID&gt;</td></tr>
+        <tr><td>no valid credential sources / dial tcp</td><td>Network</td><td class="mono">curl https://sts.us-east-1.amazonaws.com</td></tr>
+      </tbody>
+    </table>
+
+    <div class="stop"><span class="tag">Anti-hallucination rule</span><p>Prefer proof over prose. A <code>terraform plan</code> that shows the intended change is worth more than any assurance. If a fix can't be shown in <code>validate</code>, <code>plan</code>, or the provider schema, treat it as unverified and ask for the doc link before running it.</p></div>
+  </section>
+
+  <!-- P3 -->
+  <section id="validate">
+    <span class="num">PHASE 3 — POST-DEPLOYMENT VALIDATION</span>
+    <h2>Prove WAF/CAF, modularity, and FinOps — with scripts, not vibes</h2>
+
+    <h3>WAF / CAF compliance</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">HashiCorpQ</span></div>
+    <pre><span class="p">$</span> ./scripts/10-validate-waf.sh
+<span class="g">  ✓ versioning enabled   ✓ encryption at rest   ✓ public access fully blocked</span>
+<span class="g">  ✓ state stored remotely   ✓ SSM parameter readable   ✓ monthly budget exists</span></pre></div>
+
+    <h3>Modular change safety — add, update, remove without collateral damage</h3>
+    <p>The core promise of IaC is surgical change. Prove it three ways; each is a real business scenario:</p>
+    <table class="tbl">
+      <thead><tr><th>Operation</th><th>Do this</th><th>Plan should show</th></tr></thead>
+      <tbody>
+        <tr><td>Add</td><td>Add a second <code>module "logs_bucket"</code> using secure-bucket</td><td class="mono">+5 to add, 0 to change/destroy</td></tr>
+        <tr><td>Update</td><td>Change <code>budget_limit_usd = 100</code></td><td class="mono">~1 to change (in place, no recreate)</td></tr>
+        <tr><td>Remove</td><td>Delete the SSM parameter resource</td><td class="mono">-1 to destroy, buckets untouched</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><span class="tag">This is the muscle</span><p>Read every plan before applying and confirm the blast radius matches your intent. That habit — verifying the change is scoped to exactly what you meant — is the judgment that matters most in a governed account.</p></div>
+
+    <h3>FinOps</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">HashiCorpQ</span></div>
+    <pre><span class="p">$</span> ./scripts/20-finops-check.sh
+<span class="g">  ✓ budget readable   ✓ N resources under management   cost-allocation tags present</span></pre></div>
+  </section>
+
+  <!-- USE CASES -->
+  <section id="usecases">
+    <span class="num">UC — PRACTICE USE CASES</span>
+    <h2>Business scenarios to drill</h2>
+    <p class="lead">Each scenario has a Gov/Commercial framing and teaches one Terraform muscle. Run them in order; they build on each other.</p>
+    <table class="tbl">
+      <thead><tr><th>Scenario</th><th>Business framing</th><th>Teaches</th></tr></thead>
+      <tbody>
+        <tr><td>Scale the module</td><td>Stand up a dedicated evidence/logs bucket for an audit</td><td>Module reuse; additive plans</td></tr>
+        <tr><td>Surgical update</td><td>Raise a program's monthly budget mid-quarter</td><td>In-place change vs. recreate</td></tr>
+        <tr><td>Blast-radius test</td><td>Retire one config value without disturbing storage</td><td>Isolation; targeted destroy</td></tr>
+        <tr><td>Environment split</td><td>Same pattern for dev and prod via <code>name_prefix</code></td><td>Variable-driven reuse; workspaces</td></tr>
+        <tr><td>Drift &amp; recovery</td><td>Someone changes a bucket in the console; you reconcile</td><td>Drift detection; <code>plan</code> as truth</td></tr>
+        <tr><td>Cost governance</td><td>Add 50/80/100% budget alerts + allocation tags</td><td>FinOps guardrails at scale</td></tr>
+      </tbody>
+    </table>
+    <div class="key"><span class="tag">Drift drill (do this one by hand)</span><p>In the console, toggle off versioning on the artifacts bucket. Then run <code>terraform plan</code>. Terraform will show it wants to set versioning back to <code>Enabled</code> — it detected the drift and will reconcile reality to code. That's the whole value proposition in one command.</p></div>
+  </section>
+
+  <!-- P4 -->
+  <section id="final">
+    <span class="num">PHASE 4 — DESTROY, RE-DEPLOY, IMPROVE</span>
+    <h2>Close the loop</h2>
+    <p class="lead">Reproducibility is a feature you test, not assume. Destroy, rebuild from code, re-validate, then harden.</p>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">HashiCorpQ</span></div>
+    <pre><span class="p">$</span> ./scripts/99-teardown.sh          <span class="o"># destroys foundation only; bucket persists</span>
+<span class="p">$</span> cd live/infrastructure/foundation &amp;&amp; terraform apply   <span class="o"># rebuild from code</span>
+<span class="p">$</span> cd ../../.. &amp;&amp; ./scripts/10-validate-waf.sh          <span class="o"># re-prove compliance</span></pre></div>
+    <h3>Improve — the Stage 2 hardening backlog</h3>
+    <table class="tbl">
+      <tbody>
+        <tr><td>Encryption</td><td>Swap AES256 state encryption for a customer-managed KMS key</td></tr>
+        <tr><td>Quality gates</td><td>Add <code>tflint</code> + a <code>pre-commit</code> hook; run <code>validate</code>/<code>plan</code> in CI</td></tr>
+        <tr><td>Identity</td><td>Introduce a scoped <code>TerraformExecutionRole</code> instead of admin</td></tr>
+        <tr><td>Next stack</td><td>Stage 3: cross-account roles + the TGW hub in Networking</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CHEAT -->
+  <section id="cheat">
+    <span class="num">§ — COMMAND CHEAT-SHEET</span>
+    <h2>Everything, in one place</h2>
+    <div class="cheat">
+      <div class="c"><div class="t">Session start</div><code>export AWS_PROFILE=AWSAdministratorAccess-715841359129</code><code>aws sso login --profile "$AWS_PROFILE"</code><code>./scripts/00-preflight.sh</code></div>
+      <div class="c"><div class="t">Deploy</div><code>cd live/infrastructure/foundation</code><code>terraform init &amp;&amp; terraform validate</code><code>terraform plan -out tfplan &amp;&amp; terraform apply tfplan</code></div>
+      <div class="c"><div class="t">Inspect state</div><code>terraform state list</code><code>terraform show</code><code>terraform output</code></div>
+      <div class="c"><div class="t">Validate</div><code>./scripts/10-validate-waf.sh</code><code>./scripts/20-finops-check.sh</code></div>
+      <div class="c"><div class="t">Debug</div><code>terraform validate</code><code>TF_LOG=DEBUG terraform plan</code><code>terraform providers schema -json | jq …</code></div>
+      <div class="c"><div class="t">Locks &amp; teardown</div><code>terraform force-unlock &lt;LOCK_ID&gt;</code><code>./scripts/99-teardown.sh</code></div>
+    </div>
+    <div class="warn"><span class="tag">If bootstrap ever needs re-adopting</span><p>On a new machine where the bucket exists but local bootstrap state doesn't: <code>./scripts/import-bootstrap.sh</code> imports the five existing resources so <code>plan</code> shows zero changes. Optional — the foundation stack doesn't need it.</p></div>
+  </section>
+
+  <footer>HashiCorpQ · webIQ.cloud · Master Runbook v2 · Infrastructure 715841359129 · us-east-1</footer>
+  </main>
+</div>
+
+<script>
+  const bar=document.getElementById('bar');
+  const links=[...document.querySelectorAll('#toc a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  function onScroll(){
+    const h=document.documentElement;
+    bar.style.width=((h.scrollTop)/(h.scrollHeight-h.clientHeight)*100)+'%';
+    let idx=0;
+    secs.forEach((s,i)=>{ if(s && s.getBoundingClientRect().top<=140) idx=i; });
+    links.forEach((a,i)=>a.classList.toggle('active',i===idx));
+  }
+  document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+</script>
+</body>
+</html>

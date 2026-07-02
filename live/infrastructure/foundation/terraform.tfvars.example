@@ -1,0 +1,5 @@
+aws_region                = "us-east-1"
+account_alias             = "infrastructure"
+name_prefix               = "webiq-infra"
+budget_limit_usd          = 50
+budget_notification_email = "aws.administrator+infrastructure@webiq.cloud"

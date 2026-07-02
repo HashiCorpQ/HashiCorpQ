@@ -1,0 +1,54 @@
+name: Terraform CI
+
+# fmt + validate + plan on every PR and on pushes to main.
+# Auth is OIDC (no stored AWS keys). Apply stays manual/local for now.
+on:
+  pull_request:
+    paths: ["**.tf", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["**.tf"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write     # required for OIDC
+  contents: read
+
+env:
+  TF_VERSION: "1.15.7"
+  AWS_REGION: "us-east-1"
+  WORKDIR: "live/infrastructure/foundation"
+
+jobs:
+  terraform:
+    name: fmt / validate / plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TF_ROLE_ARN }}   # repo variable, set after applying github-oidc stack
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: ${{ env.WORKDIR }}
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        working-directory: ${{ env.WORKDIR }}
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: ${{ env.WORKDIR }}
+        run: terraform plan -input=false -no-color

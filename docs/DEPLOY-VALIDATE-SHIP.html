@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HashiCorpQ — Deploy, Validate &amp; Ship (CI)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root{--paper:#F4F5F8;--panel:#FFF;--ink:#15161C;--ink-soft:#3A3C46;--slate:#5E6472;--line:#DCDFE6;--line-soft:#E8EAF0;
+    --tf:#7B42BC;--tf-deep:#4F2D8C;--tf-wash:#F1EAFA;--green:#1C7A52;--green-wash:#E6F3EC;--amber:#9C5E08;--amber-wash:#FBF0DD;
+    --red:#B23A48;--red-wash:#FBEAEC;--term-bg:#16161F;--term-line:#2C2C3A;--term-text:#E7E7F1;--term-dim:#9A9AB4;}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--tf);width:0;z-index:60;transition:width .12s linear}
+  .shell{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:220px 1fr;gap:38px;padding:0 24px}
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:26px 0 40px;border-right:1px solid var(--line)}
+  nav.toc .brand{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;margin:0 0 4px}nav.toc .brand span{color:var(--tf)}
+  nav.toc .sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--slate);margin-bottom:18px}
+  nav.toc a{display:block;font-size:13px;color:var(--ink-soft);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid transparent;transition:.15s}
+  nav.toc a .k{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--tf);margin-right:7px}
+  nav.toc a:hover{color:var(--tf-deep)}nav.toc a.active{border-left-color:var(--tf);color:var(--ink);font-weight:600}
+  main{min-width:0;padding-bottom:80px}
+  header.hero{padding:48px 0 26px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--tf-deep);font-weight:600;margin:0 0 13px}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(29px,5vw,42px);line-height:1.06;letter-spacing:-.02em;margin:0 0 15px}
+  h1 .accent{color:var(--tf)}
+  .thesis{font-size:17.5px;color:var(--ink-soft);max-width:64ch;margin:0}.thesis b{color:var(--ink);font-weight:600}
+  section{padding:42px 0;border-bottom:1px solid var(--line-soft);scroll-margin-top:12px}
+  .num{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;color:var(--tf);letter-spacing:.05em;display:block;margin-bottom:8px}
+  h2{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:clamp(22px,3.4vw,28px);letter-spacing:-.01em;line-height:1.14;margin:0 0 12px}
+  h3{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:17px;margin:26px 0 8px}
+  p{margin:0 0 14px}.lead{font-size:17px;color:var(--ink-soft)}strong{font-weight:600}
+  code{font-family:"JetBrains Mono",monospace;font-size:.85em;background:var(--tf-wash);color:var(--tf-deep);padding:1.5px 6px;border-radius:5px}
+  a{color:var(--tf-deep)}
+  .key{border-left:3px solid var(--tf);background:var(--tf-wash);padding:15px 18px;border-radius:0 10px 10px 0;margin:18px 0}
+  .key .tag{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tf-deep);font-weight:600;display:block;margin-bottom:5px}
+  .key p:last-child{margin-bottom:0}
+  .note{border-left-color:var(--green);background:var(--green-wash)}.note .tag{color:var(--green)}
+  .warn{border-left-color:var(--amber);background:var(--amber-wash)}.warn .tag{color:var(--amber)}
+  .stop{border-left-color:var(--red);background:var(--red-wash)}.stop .tag{color:var(--red)}
+  .tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+  .tbl th{text-align:left;font-family:"JetBrains Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);padding:8px 10px;border-bottom:1.5px solid var(--line)}
+  .tbl td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  .tbl tr:last-child td{border-bottom:none}
+  .mono{font-family:"JetBrains Mono",monospace;font-size:.92em}
+  figure{margin:22px 0}.diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
+  figcaption{font-size:12.5px;color:var(--slate);margin-top:9px;text-align:center}
+  .term{margin:14px 0;border-radius:11px;overflow:hidden;border:1px solid var(--term-line)}
+  .term-bar{background:#1F1F2B;padding:8px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--term-line)}
+  .term-bar .dots{display:flex;gap:5px}.term-bar .dots i{width:10px;height:10px;border-radius:50%;display:block}
+  .term-bar .dots i:nth-child(1){background:#E05D5D}.term-bar .dots i:nth-child(2){background:#E0A93D}.term-bar .dots i:nth-child(3){background:#5DB075}
+  .term-bar .path{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--term-dim);margin-left:3px}
+  .term pre{margin:0;background:var(--term-bg);color:var(--term-text);padding:14px 16px;overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.62}
+  .term pre .p{color:#9C7BE0}.term pre .o{color:var(--term-dim)}.term pre .g{color:#6FD79A}
+  .step{display:grid;grid-template-columns:36px 1fr;gap:14px;margin:20px 0}
+  .step .n{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:14px;color:#fff;background:var(--tf);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .step .body{padding-top:3px}.step h3{margin-top:0}
+  @media(max-width:840px){.shell{grid-template-columns:1fr;gap:0}nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:16px 0}nav.toc a{display:inline-block;border-left:none;padding:4px 10px 4px 0}nav.toc a.active{border-left:none;text-decoration:underline}}
+</style>
+</head>
+<body>
+<div class="progress" id="bar"></div>
+<div class="shell">
+  <nav class="toc" id="toc">
+    <p class="brand">HashiCorp<span>Q</span></p>
+    <p class="sub">DEPLOY · VALIDATE · SHIP</p>
+    <a href="#resync"><span class="k">00</span>Resync the folder</a>
+    <a href="#diagram"><span class="k">01</span>Deployment map</a>
+    <a href="#deploy"><span class="k">02</span>Deploy</a>
+    <a href="#inventory"><span class="k">03</span>Resource inventory</a>
+    <a href="#manual"><span class="k">04</span>Manual validation</a>
+    <a href="#business"><span class="k">05</span>Business tests</a>
+    <a href="#cicd"><span class="k">06</span>GitHub Actions</a>
+    <a href="#destroy"><span class="k">07</span>Destroy</a>
+  </nav>
+  <main>
+  <header class="hero">
+    <p class="eyebrow">Deploy → Validate → Prove → Ship → Destroy</p>
+    <h1>Deploy, Validate<br><span class="accent">&amp; Ship with CI</span></h1>
+    <p class="thesis">This run adds two things you asked for: <b>hands-on validation of every deployed object and its function</b> before you tear anything down, and <b>GitHub Actions</b> so a pull request runs fmt, validate, and plan automatically — with no stored AWS keys. First, a two-minute folder cleanup so the scripts always resolve.</p>
+  </header>
+
+  <!-- 00 resync -->
+  <section id="resync">
+    <span class="num">00 — RESYNC THE FOLDER</span>
+    <h2>Flatten the nested directories</h2>
+    <p class="lead">Your project ended up nested (<code>HashiCorpQ/HashiCorpQ/…</code>) because the archive wrapped the files in a folder. That's why a script sometimes reports "No such file or directory." This is a local-only cleanup — your remote state is untouched, so nothing can break.</p>
+    <div class="step"><div class="n">1</div><div class="body"><h3>Start from a single clean clone</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces</span></div>
+      <pre><span class="p">$</span> cd ~/Workspaces
+<span class="p">$</span> mv HashiCorpQ HashiCorpQ.bak-$(date +%s)   <span class="o"># park the messy copy, don't delete</span>
+<span class="p">$</span> git clone git@github.com:HashiCorpQ/HashiCorpQ.git
+<span class="p">$</span> cd HashiCorpQ</pre></div></div></div>
+    <div class="step"><div class="n">2</div><div class="body"><h3>Lay the v3 files at the repo root</h3>
+      <p>Extract the provided zip so its contents land <em>here</em> (it's packed flat, no wrapper folder), then confirm the tree is one level deep.</p>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorpQ</span></div>
+      <pre><span class="p">$</span> unzip -o ~/Downloads/HashiCorpQ-v3.zip -d .
+<span class="p">$</span> ls
+<span class="g">.github  bootstrap  docs  live  modules  scripts  README.md  .gitignore</span></pre></div>
+      <div class="warn"><span class="tag">One level only</span><p>You should see <code>scripts/</code> and <code>live/</code> directly under the repo root — <strong>not</strong> under another <code>HashiCorpQ/</code>. If a stray root <code>main.tf</code> from the old repo remains, delete it: <code>rm -f main.tf</code>.</p></div></div></div>
+    <div class="step"><div class="n">3</div><div class="body"><h3>Commit the clean structure + the new CI</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorpQ</span></div>
+      <pre><span class="p">$</span> git add -A
+<span class="p">$</span> git commit -m "Flatten layout; add GitHub Actions + validation scripts"
+<span class="p">$</span> git push origin main</pre></div></div></div>
+  </section>
+
+  <!-- 01 diagram -->
+  <section id="diagram">
+    <span class="num">01 — DEPLOYMENT MAP</span>
+    <h2>What gets built, and how it connects</h2>
+    <figure><div class="diagram">
+      <svg viewBox="0 0 720 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deployment map">
+        <defs>
+          <style>
+            .t{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;fill:#15161C}
+            .s{font-family:'JetBrains Mono',monospace;font-size:9px;fill:#9A9AB4}
+            .l{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#5E6472}
+          </style>
+          <marker id="a" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7B42BC"/></marker>
+        </defs>
+        <!-- sources -->
+        <rect x="24" y="40" width="150" height="58" rx="10" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="99" y="65" text-anchor="middle" class="t">WSL · Ubuntu 26.04</text>
+        <text x="99" y="82" text-anchor="middle" class="l">terraform (local)</text>
+        <rect x="24" y="120" width="150" height="66" rx="10" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="99" y="143" text-anchor="middle" class="t">GitHub Actions</text>
+        <text x="99" y="159" text-anchor="middle" class="l">fmt · validate · plan</text>
+        <text x="99" y="174" text-anchor="middle" class="s">OIDC — no stored keys</text>
+
+        <!-- account boundary -->
+        <rect x="250" y="24" width="446" height="422" rx="16" fill="#FBFAFE" stroke="#7B42BC" stroke-dasharray="4 4"/>
+        <text x="268" y="46" class="s" fill="#7B42BC">AWS · Infrastructure 715841359129 · us-east-1</text>
+
+        <!-- state backend -->
+        <rect x="272" y="60" width="400" height="66" rx="11" fill="#F1EAFA" stroke="#7B42BC"/>
+        <text x="472" y="84" text-anchor="middle" class="t">Remote state backend (S3)</text>
+        <text x="472" y="101" text-anchor="middle" class="l">webiq-tfstate-715841359129-us-east-1</text>
+        <text x="472" y="116" text-anchor="middle" class="s">native locking · versioned · encrypted</text>
+
+        <!-- foundation stack -->
+        <rect x="272" y="146" width="400" height="182" rx="11" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="288" y="168" class="s" fill="#5E6472">stack: live/infrastructure/foundation</text>
+        <rect x="288" y="180" width="368" height="60" rx="8" fill="#F7F5FC" stroke="#E2D8F2"/>
+        <text x="472" y="200" text-anchor="middle" class="t">module.artifacts_bucket (secure-bucket)</text>
+        <text x="472" y="216" text-anchor="middle" class="l">webiq-infra-artifacts-715841359129</text>
+        <text x="472" y="230" text-anchor="middle" class="s">versioning · AES256 · public-access-block · ownership</text>
+        <rect x="288" y="250" width="180" height="62" rx="8" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="378" y="272" text-anchor="middle" class="t">SSM parameter</text>
+        <text x="378" y="288" text-anchor="middle" class="l">/webiq-infra/…/greeting</text>
+        <text x="378" y="302" text-anchor="middle" class="s">value = sensitive</text>
+        <rect x="476" y="250" width="180" height="62" rx="8" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="566" y="272" text-anchor="middle" class="t">Budget + alert</text>
+        <text x="566" y="288" text-anchor="middle" class="l">$50/mo · 80%</text>
+        <text x="566" y="302" text-anchor="middle" class="s">FinOps guardrail</text>
+
+        <!-- oidc stack -->
+        <rect x="272" y="344" width="400" height="86" rx="11" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="288" y="366" class="s" fill="#5E6472">stack: live/infrastructure/github-oidc</text>
+        <rect x="288" y="378" width="180" height="42" rx="8" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="378" y="398" text-anchor="middle" class="t">OIDC provider</text>
+        <text x="378" y="412" text-anchor="middle" class="s">token.actions.github…</text>
+        <rect x="476" y="378" width="180" height="42" rx="8" fill="#FFF" stroke="#DCDFE6"/>
+        <text x="566" y="398" text-anchor="middle" class="t">IAM role</text>
+        <text x="566" y="412" text-anchor="middle" class="s">gha-terraform-plan</text>
+
+        <!-- arrows -->
+        <line x1="174" y1="69" x2="270" y2="93" stroke="#7B42BC" stroke-width="1.6" marker-end="url(#a)"/>
+        <line x1="174" y1="153" x2="270" y2="400" stroke="#7B42BC" stroke-width="1.6" marker-end="url(#a)"/>
+        <line x1="472" y1="126" x2="472" y2="144" stroke="#7B42BC" stroke-width="1.4" marker-end="url(#a)"/>
+      </svg>
+    </div><figcaption>Two entry points (your laptop + GitHub Actions) drive Terraform against one account. State lives in S3; the foundation and OIDC stacks each own a separate state file.</figcaption></figure>
+  </section>
+
+  <!-- 02 deploy -->
+  <section id="deploy">
+    <span class="num">02 — DEPLOY</span>
+    <h2>Bring it up</h2>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorpQ</span></div>
+    <pre><span class="p">$</span> export AWS_PROFILE=AWSAdministratorAccess-715841359129
+<span class="p">$</span> aws sso login --profile "$AWS_PROFILE"
+<span class="p">$</span> ./scripts/00-preflight.sh                     <span class="o"># all green?</span>
+<span class="p">$</span> cd live/infrastructure/foundation
+<span class="p">$</span> cp terraform.tfvars.example terraform.tfvars
+<span class="p">$</span> terraform init &amp;&amp; terraform validate
+<span class="p">$</span> terraform plan -out tfplan &amp;&amp; terraform apply tfplan
+<span class="g">Apply complete! Resources: 7 added.</span></pre></div>
+    <div class="note"><span class="tag">Note the refactor</span><p>The code no longer hard-codes an AWS profile — it reads the credential chain. That's why you <code>export AWS_PROFILE</code> first. The payoff: the identical code runs in GitHub Actions, where credentials come from OIDC instead.</p></div>
+  </section>
+
+  <!-- 03 inventory -->
+  <section id="inventory">
+    <span class="num">03 — RESOURCE INVENTORY</span>
+    <h2>Every object, for identification</h2>
+    <p class="lead">Run <code>./scripts/05-inventory.sh</code> any time for the live list. Here is the definitive map of what each stack owns.</p>
+    <h3>Foundation stack &nbsp;<span class="mono" style="color:var(--slate)">infrastructure/foundation/terraform.tfstate</span></h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Terraform address</th><th>AWS object</th><th>Identifier</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="mono">module.artifacts_bucket.aws_s3_bucket.this</td><td>S3 bucket</td><td class="mono">webiq-infra-artifacts-715841359129</td></tr>
+        <tr><td>2</td><td class="mono">…aws_s3_bucket_versioning.this[0]</td><td>Versioning</td><td>Enabled</td></tr>
+        <tr><td>3</td><td class="mono">…aws_s3_bucket_server_side_encryption_configuration.this</td><td>Encryption</td><td>AES256</td></tr>
+        <tr><td>4</td><td class="mono">…aws_s3_bucket_ownership_controls.this</td><td>Ownership</td><td>BucketOwnerEnforced</td></tr>
+        <tr><td>5</td><td class="mono">…aws_s3_bucket_public_access_block.this</td><td>Public access block</td><td>all true</td></tr>
+        <tr><td>6</td><td class="mono">aws_ssm_parameter.greeting</td><td>SSM Parameter</td><td class="mono">/webiq-infra/foundation/greeting</td></tr>
+        <tr><td>7</td><td class="mono">aws_budgets_budget.monthly</td><td>Budget</td><td class="mono">webiq-infra-monthly-budget</td></tr>
+        <tr><td>—</td><td class="mono">data.aws_caller_identity.current</td><td>data source</td><td>715841359129</td></tr>
+      </tbody>
+    </table>
+    <h3>Bootstrap stack &nbsp;<span class="mono" style="color:var(--slate)">local state</span></h3>
+    <table class="tbl"><tbody>
+      <tr><td class="mono">aws_s3_bucket.tfstate + 4 settings</td><td>S3 state bucket</td><td class="mono">webiq-tfstate-715841359129-us-east-1</td></tr>
+    </tbody></table>
+    <h3>GitHub OIDC stack &nbsp;<span class="mono" style="color:var(--slate)">infrastructure/github-oidc/terraform.tfstate</span> · new</h3>
+    <table class="tbl"><tbody>
+      <tr><td class="mono">aws_iam_openid_connect_provider.github</td><td>OIDC provider</td><td class="mono">token.actions.githubusercontent.com</td></tr>
+      <tr><td class="mono">aws_iam_role.gha_terraform</td><td>IAM role</td><td class="mono">gha-terraform-plan</td></tr>
+      <tr><td class="mono">aws_iam_role_policy_attachment.readonly</td><td>Policy attach</td><td>ReadOnlyAccess</td></tr>
+      <tr><td class="mono">aws_iam_role_policy.state</td><td>Inline policy</td><td class="mono">tf-state-access</td></tr>
+    </tbody></table>
+  </section>
+
+  <!-- 04 manual validation -->
+  <section id="manual">
+    <span class="num">04 — MANUAL VALIDATION</span>
+    <h2>Eyeball every object, by hand</h2>
+    <p class="lead">The scripts give you a pass/fail summary; these commands let you read the actual AWS state yourself. Each should return the "expect" value.</p>
+    <table class="tbl">
+      <thead><tr><th>What</th><th>Command (append <code>--profile "$AWS_PROFILE"</code>)</th><th>Expect</th></tr></thead>
+      <tbody>
+        <tr><td>Bucket exists</td><td class="mono">aws s3api head-bucket --bucket webiq-infra-artifacts-715841359129</td><td>no error</td></tr>
+        <tr><td>Versioning</td><td class="mono">aws s3api get-bucket-versioning --bucket …</td><td>Enabled</td></tr>
+        <tr><td>Encryption</td><td class="mono">aws s3api get-bucket-encryption --bucket …</td><td>AES256</td></tr>
+        <tr><td>Public block</td><td class="mono">aws s3api get-public-access-block --bucket …</td><td>4× true</td></tr>
+        <tr><td>Ownership</td><td class="mono">aws s3api get-bucket-ownership-controls --bucket …</td><td>BucketOwnerEnforced</td></tr>
+        <tr><td>Tags</td><td class="mono">aws s3api get-bucket-tagging --bucket …</td><td>6 project tags</td></tr>
+        <tr><td>SSM param</td><td class="mono">aws ssm get-parameter --name /webiq-infra/foundation/greeting</td><td>the greeting</td></tr>
+        <tr><td>Budget</td><td class="mono">aws budgets describe-budget --account-id 715841359129 --budget-name webiq-infra-monthly-budget</td><td>$50 MONTHLY</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 05 business tests -->
+  <section id="business">
+    <span class="num">05 — BUSINESS TESTS</span>
+    <h2>Prove the resources actually work — before you delete</h2>
+    <p class="lead">Existence isn't function. These exercises make the resources <em>do their job</em>: store an object, keep versions, refuse a public ACL, and reconcile drift. Frame: staging audit evidence in a governed bucket.</p>
+
+    <h3>1 · Object round-trip (the bucket does its job)</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">business test</span></div>
+    <pre><span class="p">$</span> B=webiq-infra-artifacts-715841359129
+<span class="p">$</span> echo "audit-evidence-2026" &gt; /tmp/e.txt
+<span class="p">$</span> aws s3 cp /tmp/e.txt s3://$B/evidence/e.txt
+<span class="p">$</span> aws s3 cp s3://$B/evidence/e.txt -           <span class="o"># prints the content back</span>
+<span class="g">audit-evidence-2026</span></pre></div>
+
+    <h3>2 · Versioning works (compliance retention)</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">business test</span></div>
+    <pre><span class="p">$</span> aws s3 cp /tmp/e.txt s3://$B/evidence/e.txt   <span class="o"># upload again</span>
+<span class="p">$</span> aws s3api list-object-versions --bucket $B --prefix evidence/e.txt \
+     --query 'Versions[].VersionId' --output text
+<span class="g">2 version IDs  =&gt; history is preserved</span></pre></div>
+
+    <h3>3 · The guardrail refuses a public ACL (security control is real)</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">business test</span></div>
+    <pre><span class="p">$</span> aws s3api put-object-acl --bucket $B --key evidence/e.txt --acl public-read
+<span class="g">AccessDenied  =&gt; public access block is doing its job (this is the pass)</span></pre></div>
+
+    <h3>4 · Drift detection &amp; reconcile (the IaC promise)</h3>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">live/infrastructure/foundation</span></div>
+    <pre><span class="p">$</span> aws ssm put-parameter --name /webiq-infra/foundation/greeting \
+     --value "changed by hand" --type String --overwrite   <span class="o"># create drift</span>
+<span class="p">$</span> terraform plan
+<span class="g">~ aws_ssm_parameter.greeting  value =&gt; back to code value  (drift detected)</span>
+<span class="p">$</span> terraform apply     <span class="o"># reconciles reality to code</span></pre></div>
+    <div class="key"><span class="tag">This is the whole value proposition</span><p>You changed AWS out-of-band; Terraform noticed and offered to restore the declared state. In a governed account, that's how unauthorized change gets caught and corrected.</p></div>
+
+    <div class="warn"><span class="tag">Clean the bucket before destroy</span><p>You dropped test objects in the bucket. The learning bucket now has <code>force_destroy = true</code>, so <code>terraform destroy</code> will empty and remove it cleanly. If you ever set that to <code>false</code> (production posture), empty it first: <code>aws s3 rm s3://$B --recursive</code> plus delete versions.</p></div>
+  </section>
+
+  <!-- 06 cicd -->
+  <section id="cicd">
+    <span class="num">06 — GITHUB ACTIONS (CI)</span>
+    <h2>Ship it: plan on every pull request, no stored keys</h2>
+    <p class="lead">Auth is OIDC — GitHub presents a short-lived token, AWS trusts it, and Actions assumes a scoped role. Nothing secret is stored in the repo.</p>
+    <div class="step"><div class="n">1</div><div class="body"><h3>Create the OIDC provider + role (one-time)</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">live/infrastructure/github-oidc</span></div>
+      <pre><span class="p">$</span> cd live/infrastructure/github-oidc
+<span class="p">$</span> terraform init &amp;&amp; terraform apply
+<span class="p">$</span> terraform output role_arn
+<span class="g">arn:aws:iam::715841359129:role/gha-terraform-plan</span></pre></div></div></div>
+    <div class="step"><div class="n">2</div><div class="body"><h3>Tell the repo which role to assume</h3>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">repo variable</span></div>
+      <pre><span class="p">$</span> gh variable set AWS_TF_ROLE_ARN \
+     --body arn:aws:iam::715841359129:role/gha-terraform-plan \
+     --repo HashiCorpQ/HashiCorpQ</pre></div></div></div>
+    <div class="step"><div class="n">3</div><div class="body"><h3>Trigger it</h3>
+      <p>Open a PR that touches any <code>.tf</code> file (or run the workflow manually from the Actions tab). The <strong>fmt / validate / plan</strong> job runs and posts its plan to the run log.</p>
+      <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorpQ</span></div>
+      <pre><span class="p">$</span> git checkout -b ci-test &amp;&amp; echo "# ci" &gt;&gt; live/infrastructure/foundation/main.tf
+<span class="p">$</span> git commit -am "test CI" &amp;&amp; git push -u origin ci-test
+<span class="p">$</span> gh pr create --fill &amp;&amp; gh run watch</pre></div></div></div>
+    <div class="note"><span class="tag">Plan-only, by design</span><p>The role carries ReadOnly + state access — enough to <code>plan</code>, not to <code>apply</code>. Apply stays a deliberate, local action for now. When you want apply-in-CI, widen the role and add a gated <code>apply</code> job on merge to <code>main</code>.</p></div>
+  </section>
+
+  <!-- 07 destroy -->
+  <section id="destroy">
+    <span class="num">07 — DESTROY (LAST)</span>
+    <h2>Only after every check above is green</h2>
+    <div class="term"><div class="term-bar"><div class="dots"><i></i><i></i><i></i></div><span class="path">~/Workspaces/HashiCorpQ</span></div>
+    <pre><span class="p">$</span> ./scripts/05-inventory.sh          <span class="o"># record what exists</span>
+<span class="p">$</span> ./scripts/10-validate-waf.sh       <span class="o"># prove compliance while live</span>
+<span class="p">$</span> ./scripts/99-teardown.sh           <span class="o"># destroy foundation</span>
+<span class="p">$</span> ./scripts/11-validate-destroyed.sh <span class="o"># PROVE it's gone (before any re-apply)</span></pre></div>
+    <p>Leave the <code>github-oidc</code> stack standing — it's cheap (IAM has no hourly cost) and you want CI available. Only tear it down if you're closing the whole exercise.</p>
+  </section>
+
+  <footer style="padding:32px 0;color:var(--slate);font-size:13px">HashiCorpQ · webIQ.cloud · Deploy/Validate/Ship · Infrastructure 715841359129</footer>
+  </main>
+</div>
+<script>
+  const bar=document.getElementById('bar');
+  const links=[...document.querySelectorAll('#toc a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  function onScroll(){const h=document.documentElement;bar.style.width=((h.scrollTop)/(h.scrollHeight-h.clientHeight)*100)+'%';
+    let idx=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<=140)idx=i;});
+    links.forEach((a,i)=>a.classList.toggle('active',i===idx));}
+  document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+</script>
+</body>
+</html>
