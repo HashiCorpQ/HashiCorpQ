@@ -16,3 +16,5 @@ terraform.rc
 # .terraform.lock.hcl is intentionally NOT ignored -- commit it.
 
 *.zip
+
+tfplan
